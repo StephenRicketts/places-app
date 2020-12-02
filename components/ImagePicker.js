@@ -46,11 +46,10 @@ const ImgPicker = (props) => {
         )}
 
         <Button
-          style={{ margin: 10 }}
           title="Take Image"
           color={Colors.primary}
           onPress={takeImageHandler}
-        ></Button>
+        />
       </View>
     </View>
   );
