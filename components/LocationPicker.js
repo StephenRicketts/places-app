@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Button,
@@ -10,10 +10,26 @@ import {
 import Colors from "../constants/Colors";
 import * as Location from "expo-location";
 import * as Permissions from "expo-permissions";
+import MapPreview from './MapPreview'
 
 const LocationPicker = (props) => {
   const [pickedLocation, setPickedLocation] = useState();
   const [isFetching, setIsFetching] = useState(false);
+
+  const mapPickedLocation = props.navigation.getParam('pickedLocation');
+
+  const {onLocationPicked} = props
+
+  useEffect(() => {
+    if (mapPickedLocation) {
+      setPickedLocation(mapPickedLocation);
+      onLocationPicked({
+        lat: location.coords.latitude,
+        lng: location.coords.longitude
+      });
+    }
+  }, [mapPickedLocation, onLocationPicked]);
+
   const verifyPermissions = async () => {
     const result = await Permissions.askAsync(Permissions.LOCATION);
     if (result.status !== "granted") {
@@ -40,22 +56,41 @@ const LocationPicker = (props) => {
         lat: location.coords.latitude,
         lng: location.coords.longitude
       });
+      
+      props.onLocationPicked({
+        lat: location.coords.latitude,
+        lng: location.coords.longitude
+      });
+
     } catch (err) {
       Alert.alert('Could not fetch location!', 'Please try again later or pick a location on the map.', [{text: 'Okay'}])
     }
     setIsFetching(false);
   };
 
+  const pickOnMapHandler = () => {
+ props.navigation.navigate('Map');
+  }
+
 return (
   <View style={styles.loctationPicker}>
-    <View style={styles.mapPreview}>
-      {isFetching ? <ActivityIndicator size={'large'} color={Colors.primary}/> : <Text>No location chosed yet!</Text>}
-    </View>
+    <MapPreview style={styles.mapPreview} location={pickedLocation} onPress={pickOnMapHandler}/>
+    {isFetching ? (
+        <ActivityIndicator size={"large"} color={Colors.primary} />
+      ) : (
+        <Text>No location chosed yet!</Text>
+      )}
+    <View style={styles.locations}>
     <Button
       title="Get User Location"
       color={Colors.primary}
       onPress={getLocationHandler}
     />
+    <Button
+     title="Pick on Map" 
+     color={Colors.primary} 
+     onPress={pickOnMapHandler}/>
+    </View>
   </View>);
 };
 
@@ -67,9 +102,15 @@ const styles = StyleSheet.create({
     height: 150,
     borderColor: "#ccc",
     borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
   },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%'
+  }
 });
 
 export default LocationPicker;
+
+// AIzaSyAa1etbhB2AzmG1zoc31dX-BlGCtjsWd5Q
+//https://maps.googleapis.com/maps/api/staticmap?center=40.714728,-73.998672&zoom=12&size=400x400&key=YOUR_API_KEY
